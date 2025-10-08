@@ -2,12 +2,14 @@ from app import app, db, User
 from werkzeug.security import generate_password_hash
 
 with app.app_context():
-    # Drop all tables and recreate them (WARNING: This deletes all data!)
+    # Drop all tables and recreate (WARNING: deletes all data!)
+    print("Dropping all tables...")
     db.drop_all()
-    db.create_all()
-    print("Database tables recreated!")
     
-    # Create admin user
+    print("Creating all tables with new schema...")
+    db.create_all()
+    
+    print("Creating admin user...")
     admin_user = User(
         username='admin',
         email='admin@grocery.com',
@@ -19,4 +21,4 @@ with app.app_context():
     )
     db.session.add(admin_user)
     db.session.commit()
-    print("Admin user created: username=admin, password=admin123")
+    print("Done! Database recreated successfully.")
