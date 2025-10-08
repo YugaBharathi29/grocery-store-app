@@ -31,13 +31,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form && (
         form.action.includes('delete') || 
         form.action.includes('edit') ||
+        form.action.includes('edit_user') ||
         form.action.includes('add_to_cart') ||
         form.action.includes('checkout') ||
         form.action.includes('profile') ||
         form.action.includes('/login') ||
         form.action.includes('/register') ||
         form.action.includes('add_category') ||
-        form.action.includes('add_product')
+        form.action.includes('add_product') ||
+        form.action.includes('update_order_status')
     )) {
       return; // Don't apply processing state to these forms
     }
@@ -47,6 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.pathname.includes('/register') ||
         window.location.pathname.includes('add_category') ||
         window.location.pathname.includes('add_product') ||
+        window.location.pathname.includes('edit_category') ||
+        window.location.pathname.includes('edit_product') ||
+        window.location.pathname.includes('edit_user') ||
         window.location.pathname.includes('checkout') ||
         window.location.pathname.includes('profile')) {
       return;
