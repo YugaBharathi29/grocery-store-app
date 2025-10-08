@@ -42,7 +42,7 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    image = db.Column(db.String(200))
+    image = db.Column(db.Text)  # Changed from String(200) to Text for base64 support
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     products = db.relationship('Product', backref='category', lazy=True, cascade='all, delete-orphan')
 
@@ -52,7 +52,7 @@ class Product(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
-    image = db.Column(db.String(200))
+    image = db.Column(db.Text)  # Changed from String(200) to Text for base64 support
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
