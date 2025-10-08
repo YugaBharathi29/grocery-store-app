@@ -1,0 +1,45 @@
+<!-- templates/admin/add_category.html -->
+{% extends "base.html" %}
+{% block title %}Add Category - Admin{% endblock %}
+{% block content %}
+<div class="container-fluid admin-area">
+  <div class="row">
+    <div class="col-md-3 col-lg-2 admin-sidebar-col">
+      <!-- sidebar omitted for brevity -->
+    </div>
+    <div class="col-md-9 col-lg-10 admin-content-col">
+      <div class="admin-main-content">
+        <h2 class="admin-text mb-4"><i class="fas fa-plus text-success me-2"></i>Add Category</h2>
+        <div class="card">
+          <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label for="name" class="form-label">Category Name *</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+                <div class="invalid-feedback">Please enter a category name.</div>
+              </div>
+              <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Category Image</label>
+                <div class="input-group mb-2">
+                  <input type="file" class="form-control" name="image_file" accept="image/*">
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text">OR Image URL</span>
+                  <input type="url" class="form-control" name="image_url" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="form-text">Provide either an upload or a public image URL (PNG, JPG, JPEG, GIF).</div>
+              </div>
+              <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Add Category</button>
+              <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-secondary ms-2"><i class="fas fa-times me-2"></i>Cancel</a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

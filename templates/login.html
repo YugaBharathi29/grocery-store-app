@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Grocery Store{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center">
+                    <h3><i class="fas fa-sign-in-alt me-2"></i>Login</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p>Don't have an account? <a href="{{ url_for('register') }}" class="text-success">Register here</a></p>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6>Demo Accounts:</h6>
+                        <small class="text-muted">
+                            <strong>Admin:</strong> admin / admin123<br>
+                            <strong>Customer:</strong> Register a new account
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

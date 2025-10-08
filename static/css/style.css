@@ -1,0 +1,477 @@
+/* Custom Styles for Grocery Store */
+
+:root {
+    --primary-color: #28a745;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    min-height: 500px;
+}
+
+.hero-section h1 {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Card Hover Effects */
+.category-card, .product-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.category-card:hover, .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+/* Product Cards */
+.product-card .card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 5px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: #1e7e34;
+    border-color: #1c7430;
+    transform: translateY(-1px);
+}
+
+/* Form Styles */
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* FIXED: Admin Sidebar Styles */
+.sidebar {
+    min-height: calc(100vh - 56px);
+    padding: 20px 0;
+    background-color: #f8f9fa !important;
+    border-right: 1px solid #dee2e6;
+}
+
+.sidebar .list-group-item {
+    border: none;
+    border-radius: 0;
+    padding: 12px 20px;
+    color: #495057 !important;
+    background-color: transparent !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sidebar .list-group-item:hover {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    color: #28a745 !important;
+}
+
+.sidebar .list-group-item.active {
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
+    color: white !important;
+}
+
+.sidebar .list-group-item i {
+    width: 20px;
+    margin-right: 8px;
+}
+
+/* FIXED: Admin Main Content Area */
+.admin-main-content {
+    background-color: white;
+    min-height: calc(100vh - 56px);
+    padding: 30px;
+}
+
+.admin-main-content h2 {
+    color: #343a40 !important;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+.admin-main-content h3,
+.admin-main-content h4,
+.admin-main-content h5 {
+    color: #495057 !important;
+}
+
+/* FIXED: Admin Cards */
+.admin-stats-card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.admin-stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.admin-stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.admin-stats-card h4 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.admin-stats-card p {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Table Styles */
+.table {
+    background-color: white;
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--dark-color) !important;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 15px 12px;
+}
+
+.table td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    color: #495057 !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+/* FIXED: Card Headers */
+.card-header {
+    background-color: var(--success-color) !important;
+    border-bottom: none;
+    color: white !important;
+    font-weight: 600;
+    padding: 15px 20px;
+}
+
+.card-header h3,
+.card-header h4,
+.card-header h5 {
+    color: white !important;
+    margin-bottom: 0;
+}
+
+/* FIXED: Card Body */
+.card-body {
+    padding: 20px;
+    background-color: white;
+}
+
+.card {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Modal Styles */
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    background-color: var(--success-color);
+    color: white;
+}
+
+.modal-header .modal-title {
+    color: white !important;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 5px;
+    border: none;
+    margin-bottom: 20px;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.75em;
+    padding: 0.375rem 0.5rem;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    background-color: #343a40 !important;
+}
+
+/* FIXED: Admin Layout */
+.admin-container {
+    padding: 0;
+}
+
+.admin-sidebar-col {
+    padding: 0;
+}
+
+.admin-content-col {
+    padding: 0;
+}
+
+/* FIXED: Admin Navigation Items */
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #495057;
+    padding: 12px 20px;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.admin-nav-item:hover {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    text-decoration: none;
+}
+
+.admin-nav-item.active {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.admin-nav-item i {
+    width: 20px;
+    margin-right: 10px;
+    text-align: center;
+}
+
+/* FIXED: Visibility Issues */
+.text-visible {
+    color: #495057 !important;
+    opacity: 1 !important;
+}
+
+.admin-text {
+    color: #343a40 !important;
+    font-weight: 500;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 400px;
+        text-align: center;
+    }
+
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+
+    .sidebar {
+        min-height: auto;
+    }
+
+    .admin-main-content {
+        padding: 15px;
+    }
+}
+
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--success-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #1e7e34;
+}
+
+/* Feature Icons */
+.feature-icon i {
+    transition: transform 0.3s ease;
+}
+
+.feature-icon:hover i {
+    transform: scale(1.1);
+}
+
+/* Cart Item Styles */
+.cart-item {
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 0;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+/* Order Status Badges */
+.badge.bg-warning {
+    color: #000;
+}
+
+/* Input Group Styles */
+.input-group-text {
+    background-color: var(--light-color);
+    border-color: #ced4da;
+}
+
+/* Breadcrumb Styles */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0.5rem 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: var(--secondary-color);
+}
+
+/* Success Messages */
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+/* Error Messages */
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+/* Info Messages */
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+/* Warning Messages */
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+/* FIXED: Admin specific visibility fixes */
+.container-fluid .row .col-md-9,
+.container-fluid .row .col-lg-10 {
+    background-color: white;
+    color: #495057 !important;
+}
+
+/* Force text visibility in admin area */
+.admin-area * {
+    color: inherit !important;
+}
+
+.admin-area h1,
+.admin-area h2,
+.admin-area h3,
+.admin-area h4,
+.admin-area h5,
+.admin-area h6 {
+    color: #343a40 !important;
+}
+
+.admin-area p,
+.admin-area span,
+.admin-area div {
+    color: #495057 !important;
+}
+
+/* Button group fixes */
+.btn-group .btn {
+    border: 1px solid #dee2e6;
+}
+
+.btn-outline-primary {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-info {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}

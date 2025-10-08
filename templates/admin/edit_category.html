@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Category - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-area">
+  <div class="row">
+    <div class="col-md-3 col-lg-2 admin-sidebar-col">
+      <div class="sidebar">
+        <div class="list-group list-group-flush">
+          <a href="{{ url_for('admin_dashboard') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          <a href="{{ url_for('admin_categories') }}" class="list-group-item admin-nav-item active">
+            <i class="fas fa-tags"></i> Categories
+          </a>
+          <a href="{{ url_for('admin_products') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-box"></i> Products
+          </a>
+          <a href="{{ url_for('admin_orders') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-shopping-cart"></i> Orders
+          </a>
+          <a href="{{ url_for('admin_users') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-users"></i> Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9 col-lg-10 admin-content-col">
+      <div class="admin-main-content">
+        <h2 class="admin-text mb-4">
+          <i class="fas fa-edit text-success me-2"></i>Edit Category
+        </h2>
+        <div class="card">
+          <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label for="name" class="form-label text-dark">Category Name *</label>
+                <input type="text" class="form-control text-dark" id="name" name="name" value="{{ category.name }}" required>
+                <div class="invalid-feedback">Please enter a category name.</div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="description" class="form-label text-dark">Description</label>
+                <textarea class="form-control text-dark" id="description" name="description" rows="3">{{ category.description or '' }}</textarea>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-dark">Current Image</label>
+                <div class="mb-2">
+                  {% if category.image %}
+                    {% if category.image.startswith('http') %}
+                      <img src="{{ category.image }}" alt="{{ category.name }}" class="img-thumbnail" style="max-width: 200px;">
+                    {% else %}
+                      <img src="{{ url_for('static', filename='uploads/' + category.image) }}" alt="{{ category.name }}" class="img-thumbnail" style="max-width: 200px;">
+                    {% endif %}
+                  {% else %}
+                    <p class="text-muted">No image uploaded</p>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label text-dark">Update Category Image</label>
+                <div class="input-group mb-2">
+                  <input type="file" class="form-control text-dark" name="image_file" accept="image/*">
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text">OR Image URL</span>
+                  <input type="url" class="form-control text-dark" name="image_url" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="form-text text-muted">Leave empty to keep current image. Provide file upload or URL (PNG, JPG, JPEG, GIF).</div>
+              </div>
+              
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save me-2"></i>Update Category
+              </button>
+              <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-secondary text-dark ms-2">
+                <i class="fas fa-times me-2"></i>Cancel
+              </a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-label, .form-control, .text-dark {
+    color: #343a40 !important;
+  }
+  .admin-nav-item {
+    color: #495057 !important;
+  }
+  .admin-nav-item.active {
+    background-color: #28a745 !important;
+    color: white !important;
+  }
+</style>
+{% endblock %}

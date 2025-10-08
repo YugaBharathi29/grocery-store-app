@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-area">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 admin-sidebar-col">
+      <div class="sidebar">
+        <div class="list-group list-group-flush">
+          <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-tags"></i> Categories
+          </a>
+          <a href="{{ url_for('admin_products') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-box"></i> Products
+          </a>
+          <a href="{{ url_for('admin_orders') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-shopping-cart"></i> Orders
+          </a>
+          <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action admin-nav-item active">
+            <i class="fas fa-users"></i> Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10 admin-content-col">
+      <div class="admin-main-content">
+        <h2 class="admin-text mb-4">
+          <i class="fas fa-users text-success me-2"></i>Manage Users
+        </h2>
+
+        {% if users %}
+        <div class="card">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-striped mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Type</th>
+                    <th>Orders</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in users %}
+                  <tr class="text-visible">
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>{{ user.full_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone or 'N/A' }}</td>
+                    <td>
+                      {% if user.is_admin %}
+                        <span class="badge bg-danger">Admin</span>
+                      {% else %}
+                        <span class="badge bg-primary">Customer</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ user.orders|length }}</td>
+                    <td>{{ user.created_at.strftime('%m/%d/%Y') }}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#userModal{{ user.id }}">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- User Details Modal -->
+                  <div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                          <h5 class="modal-title">User Details - {{ user.username }}</h5>
+                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <p><strong>Full Name:</strong> {{ user.full_name }}</p>
+                          <p><strong>Email:</strong> {{ user.email }}</p>
+                          <p><strong>Phone:</strong> {{ user.phone or 'Not provided' }}</p>
+                          <p><strong>Address:</strong><br>{{ user.address or 'N/A' }}</p>
+                          <p><strong>Account Type:</strong> {{ 'Admin' if user.is_admin else 'Customer' }}</p>
+                          <p><strong>Member Since:</strong> {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                          {% if user.orders %}
+                          <h6>Recent Orders</h6>
+                          <ul class="list-unstyled">
+                            {% for order in user.orders[-5:] %}
+                            <li>
+                              #{{ order.id }} – ₹{{ "%.2f"|format(order.total_amount) }} on {{ order.created_at.strftime('%m/%d/%Y') }}
+                            </li>
+                            {% endfor %}
+                          </ul>
+                          {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <div class="mb-4">
+            <i class="fas fa-users fa-4x text-muted"></i>
+          </div>
+          <h4 class="admin-text">No users found</h4>
+          <p class="text-muted">Users will appear here once they register.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Ensure text visibility */
+  .admin-area h2, .admin-area td, .admin-area p {
+    color: #343a40 !important;
+  }
+  .admin-nav-item {
+    color: #495057 !important;
+  }
+  .admin-nav-item.active {
+    background-color: #28a745 !important;
+    color: white !important;
+  }
+  .text-visible {
+    color: #495057 !important;
+  }
+</style>
+{% endblock %}

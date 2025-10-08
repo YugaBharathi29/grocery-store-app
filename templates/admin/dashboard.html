@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Grocery Store{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-area">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 admin-sidebar-col">
+      <div class="sidebar">
+        <div class="list-group list-group-flush">
+          <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action admin-nav-item active">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-tags"></i> Categories
+          </a>
+          <a href="{{ url_for('admin_products') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-box"></i> Products
+          </a>
+          <a href="{{ url_for('admin_orders') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-shopping-cart"></i> Orders
+          </a>
+          <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action admin-nav-item">
+            <i class="fas fa-users"></i> Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10 admin-content-col">
+      <div class="admin-main-content">
+        <h2 class="admin-text mb-4">
+          <i class="fas fa-tachometer-alt text-success me-2"></i>Admin Dashboard
+        </h2>
+
+        <div class="row mb-4">
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card admin-stats-card bg-primary text-white">
+              <div class="card-body">
+                <h4>{{ total_users or 0 }}</h4>
+                <p>Total Users</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card admin-stats-card bg-success text-white">
+              <div class="card-body">
+                <h4>{{ total_products or 0 }}</h4>
+                <p>Total Products</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card admin-stats-card bg-warning text-white">
+              <div class="card-body">
+                <h4>{{ total_orders or 0 }}</h4>
+                <p>Total Orders</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card admin-stats-card bg-info text-white">
+              <div class="card-body">
+                <h4>{{ total_categories or 0 }}</h4>
+                <p>Total Categories</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5><i class="fas fa-clock me-2"></i>Recent Orders</h5>
+          </div>
+          <div class="card-body">
+            {% if recent_orders %}
+              <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                      <td>#{{ order.id }}</td>
+                      <td>{{ order.user.full_name }}</td>
+                      <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                      <td>
+                        <span class="badge bg-{{ 
+                          'success' if order.status=='Delivered' else
+                          'info' if order.status=='Processing' else
+                          'primary' if order.status=='Shipped' else
+                          'warning' }}">{{ order.status }}</span>
+                      </td>
+                      <td>{{ order.created_at.strftime('%m/%d/%Y') }}</td>
+                      <td>
+                        <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline-light">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="text-muted">No orders yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

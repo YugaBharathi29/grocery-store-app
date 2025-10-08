@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Product - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid admin-area">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 admin-sidebar-col">
+      <div class="sidebar">
+        <div class="list-group list-group-flush">
+          <a href="{{ url_for('admin_dashboard') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          <a href="{{ url_for('admin_categories') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-tags"></i> Categories
+          </a>
+          <a href="{{ url_for('admin_products') }}" class="list-group-item admin-nav-item active">
+            <i class="fas fa-box"></i> Products
+          </a>
+          <a href="{{ url_for('admin_orders') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-shopping-cart"></i> Orders
+          </a>
+          <a href="{{ url_for('admin_users') }}" class="list-group-item admin-nav-item">
+            <i class="fas fa-users"></i> Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10 admin-content-col">
+      <div class="admin-main-content">
+        <h2 class="admin-text mb-4">
+          <i class="fas fa-edit text-success me-2"></i>Edit Product
+        </h2>
+        <div class="card">
+          <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="name" class="form-label text-dark">Product Name *</label>
+                    <input type="text" class="form-control text-dark" id="name" name="name" value="{{ product.name }}" required>
+                    <div class="invalid-feedback">Please enter a product name.</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="category_id" class="form-label text-dark">Category *</label>
+                    <select class="form-select text-dark" id="category_id" name="category_id" required>
+                      <option value="">Select Category</option>
+                      {% for category in categories %}
+                      <option value="{{ category.id }}" {% if category.id == product.category_id %}selected{% endif %}>{{ category.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Please select a category.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="description" class="form-label text-dark">Description</label>
+                <textarea class="form-control text-dark" id="description" name="description" rows="3">{{ product.description or '' }}</textarea>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="price" class="form-label text-dark">Price (₹) *</label>
+                    <input type="number" step="0.01" class="form-control text-dark" id="price" name="price" value="{{ product.price }}" required>
+                    <div class="invalid-feedback">Please enter a valid price.</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="stock" class="form-label text-dark">Stock Quantity *</label>
+                    <input type="number" class="form-control text-dark" id="stock" name="stock" value="{{ product.stock }}" required>
+                    <div class="invalid-feedback">Please enter stock quantity.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label text-dark">Current Image</label>
+                <div class="mb-2">
+                  {% if product.image %}
+                    {% if product.image.startswith('http') or product.image.startswith('data:') %}
+                      <img src="{{ product.image }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 200px;">
+                    {% else %}
+                      <img src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 200px;">
+                    {% endif %}
+                  {% else %}
+                    <p class="text-muted">No image uploaded</p>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label text-dark">Update Product Image</label>
+                <div class="input-group mb-2">
+                  <input type="file" class="form-control text-dark" name="image_file" accept="image/*">
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text">OR Image URL</span>
+                  <input type="url" class="form-control text-dark" name="image_url" placeholder="https://example.com/product.jpg">
+                </div>
+                <div class="form-text text-muted">Leave empty to keep current image. Provide file upload or URL (PNG, JPG, JPEG, GIF).</div>
+              </div>
+
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save me-2"></i>Update Product
+              </button>
+              <a href="{{ url_for('admin_products') }}" class="btn btn-outline-secondary text-dark ms-2">
+                <i class="fas fa-times me-2"></i>Cancel
+              </a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-label, .form-control, .form-select, .text-dark {
+    color: #343a40 !important;
+  }
+  .admin-nav-item {
+    color: #495057 !important;
+  }
+  .admin-nav-item.active {
+    background-color: #28a745 !important;
+    color: white !important;
+  }
+  .admin-text {
+    color: #343a40 !important;
+  }
+</style>
+
+<script>
+// Form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms).forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+{% endblock %}
