@@ -534,6 +534,47 @@ def admin_users():
     users = User.query.all()
     return render_template('admin/users.html', users=users)
 
+@app.route('/admin/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        user.full_name = request.form['full_name']
+        user.email = request.form['email']
+        user.phone = request.form['phone']
+        user.address = request.form['address']
+        
+        # Update admin status
+        user.is_admin = 'is_admin' in request.form
+        
+        # Update password if provided
+        new_password = request.form.get('new_password')
+        if new_password:
+            user.password_hash = generate_password_hash(new_password)
+        
+        db.session.commit()
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('admin_users'))
+    
+    return render_template('admin/edit_user.html', user=user)
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Don't allow deleting yourself
+    if user.id == session['user_id']:
+        flash('You cannot delete your own account!', 'error')
+        return redirect(url_for('admin_users'))
+    
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully!', 'success')
+    return redirect(url_for('admin_users'))
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
