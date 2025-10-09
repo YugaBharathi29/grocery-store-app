@@ -9,30 +9,17 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
 
-# Critical session settings for Render
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600
-app.config['SESSION_COOKIE_SECURE'] = True  # Set to True if using HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-
-# Force JSON serialization for session
-app.config['SESSION_SERIALIZATION_FORMAT'] = 'json'
-
-
-# Database configuration - PostgreSQL on Render, SQLite locally
+# Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///grocery_store.db')
 
-# Fix for Render's PostgreSQL URL format (postgres:// → postgresql://)
+# Fix for Render's PostgreSQL URL format
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
-# Allowed file extensions for image uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 db = SQLAlchemy(app)
@@ -54,7 +41,7 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    image = db.Column(db.Text)  # Changed from String(200) to Text for base64 support
+    image = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     products = db.relationship('Product', backref='category', lazy=True, cascade='all, delete-orphan')
 
@@ -64,7 +51,7 @@ class Product(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
-    image = db.Column(db.Text)  # Changed from String(200) to Text for base64 support
+    image = db.Column(db.Text)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -94,12 +81,9 @@ class Cart(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='cart_items')
-    product = db.relationship('Product')
+    product = db.relationship('Product', backref='cart_entries')
     
-    # Ensure unique constraint on user_id and product_id
     __table_args__ = (db.UniqueConstraint('user_id', 'product_id'),)
-
-
 
 # Helper functions
 def allowed_file(filename):
@@ -234,18 +218,35 @@ def profile():
     
     return render_template('profile.html', user=user)
 
+# Cart Routes
+@app.route('/cart')
+@login_required
+def cart():
+    cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
+    
+    products = []
+    total = 0
+    
+    for item in cart_items:
+        if item.product:
+            products.append({
+                'product': item.product,
+                'quantity': item.quantity
+            })
+            total += item.product.price * item.quantity
+    
+    return render_template('cart.html', products=products, total=total)
+
 @app.route('/add_to_cart/<int:product_id>', methods=['POST'])
 @login_required
 def add_to_cart(product_id):
     product = Product.query.get_or_404(product_id)
     quantity = int(request.form.get('quantity', 1))
     
-    # Validate stock
     if product.stock < quantity:
         flash(f'Only {product.stock} items available in stock!', 'error')
         return redirect(url_for('product_detail', id=product_id))
     
-    # Check if item already in cart
     cart_item = Cart.query.filter_by(
         user_id=session['user_id'],
         product_id=product_id
@@ -265,99 +266,6 @@ def add_to_cart(product_id):
     flash(f'{product.name} added to cart!', 'success')
     return redirect(url_for('cart'))
 
-# Update your cart route
-@app.route('/cart')
-@login_required
-def cart():
-    # Get all cart items for the current user
-    cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
-    
-    products = []
-    total = 0
-    
-    for item in cart_items:
-        products.append({
-            'product': item.product,
-            'quantity': item.quantity
-        })
-        total += item.product.price * item.quantity
-    
-    return render_template('cart.html', products=products, total=total)
-
-# Update your remove_from_cart route
-@app.route('/remove_from_cart/<int:product_id>')
-@login_required
-def remove_from_cart(product_id):
-    cart_item = Cart.query.filter_by(
-        user_id=session['user_id'],
-        product_id=product_id
-    ).first()
-    
-    if cart_item:
-        db.session.delete(cart_item)
-        db.session.commit()
-        flash('Product removed from cart.', 'success')
-    else:
-        flash('Product not found in cart.', 'error')
-    
-    return redirect(url_for('cart'))
-
-
-@app.route('/checkout', methods=['GET', 'POST'])
-@login_required
-def checkout():
-    cart = session.get('cart', {})
-    if not cart:
-        flash('Your cart is empty.', 'error')
-        return redirect(url_for('products'))
-    
-    if request.method == 'POST':
-        user = User.query.get(session['user_id'])
-        shipping_address = request.form['shipping_address']
-        payment_method = request.form['payment_method']
-        
-        total = 0
-        order = Order(
-            user_id=user.id,
-            total_amount=0,
-            shipping_address=shipping_address,
-            payment_method=payment_method
-        )
-        db.session.add(order)
-        db.session.flush()
-        
-        for product_id, quantity in cart.items():
-            product = Product.query.get(int(product_id))
-            if product and product.stock >= quantity:
-                order_item = OrderItem(
-                    order_id=order.id,
-                    product_id=product.id,
-                    quantity=quantity,
-                    price=product.price
-                )
-                product.stock -= quantity
-                total += product.price * quantity
-                db.session.add(order_item)
-        
-        order.total_amount = total + 50  # Adding delivery charge
-        db.session.commit()
-        
-        session['cart'] = {}
-        flash('Order placed successfully!', 'success')
-        return redirect(url_for('my_orders'))
-    
-    user = User.query.get(session['user_id'])
-    cart_items = []
-    subtotal = 0
-    
-    for product_id, quantity in cart.items():
-        product = Product.query.get(int(product_id))
-        if product:
-            cart_items.append({'product': product, 'quantity': quantity})
-            subtotal += product.price * quantity
-    
-    return render_template('checkout.html', cart_items=cart_items, subtotal=subtotal, user=user)
-
 @app.route('/update_cart_quantity/<int:product_id>', methods=['POST'])
 @login_required
 def update_cart_quantity(product_id):
@@ -368,21 +276,98 @@ def update_cart_quantity(product_id):
         product_id=product_id
     ).first()
     
-    if cart_item:
-        if action == 'increase':
-            # Check stock before increasing
-            product = Product.query.get(product_id)
-            if cart_item.quantity < product.stock:
-                cart_item.quantity += 1
-                flash(f'Quantity updated for {product.name}', 'success')
-        elif action == 'decrease' and cart_item.quantity > 1:
+    if not cart_item:
+        flash('Item not found in cart.', 'error')
+        return redirect(url_for('cart'))
+    
+    product = Product.query.get_or_404(product_id)
+    
+    if action == 'increase':
+        if cart_item.quantity < product.stock:
+            cart_item.quantity += 1
+            flash(f'Quantity increased for {product.name}', 'success')
+        else:
+            flash(f'Only {product.stock} items available in stock!', 'error')
+    elif action == 'decrease':
+        if cart_item.quantity > 1:
             cart_item.quantity -= 1
-            flash(f'Quantity updated for {product.name}', 'success')
-        
+            flash(f'Quantity decreased for {product.name}', 'success')
+        else:
+            db.session.delete(cart_item)
+            flash(f'{product.name} removed from cart.', 'success')
+    
+    db.session.commit()
+    return redirect(url_for('cart'))
+
+@app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
+@login_required
+def remove_from_cart(product_id):
+    cart_item = Cart.query.filter_by(
+        user_id=session['user_id'],
+        product_id=product_id
+    ).first()
+    
+    if cart_item:
+        product_name = cart_item.product.name
+        db.session.delete(cart_item)
         db.session.commit()
+        flash(f'{product_name} removed from cart.', 'success')
+    else:
+        flash('Item not found in cart.', 'error')
     
     return redirect(url_for('cart'))
 
+@app.route('/checkout', methods=['GET', 'POST'])
+@login_required
+def checkout():
+    cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
+    
+    if not cart_items:
+        flash('Your cart is empty.', 'error')
+        return redirect(url_for('cart'))
+    
+    subtotal = 0
+    for item in cart_items:
+        if item.product:
+            subtotal += item.product.price * item.quantity
+    
+    total = subtotal + 50
+    
+    if request.method == 'POST':
+        order = Order(
+            user_id=session['user_id'],
+            total_amount=total,
+            shipping_address=request.form['shipping_address'],
+            payment_method=request.form['payment_method'],
+            status='Pending'
+        )
+        db.session.add(order)
+        db.session.flush()
+        
+        for item in cart_items:
+            if item.product:
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=item.product.id,
+                    quantity=item.quantity,
+                    price=item.product.price
+                )
+                db.session.add(order_item)
+                item.product.stock -= item.quantity
+        
+        for item in cart_items:
+            db.session.delete(item)
+        
+        db.session.commit()
+        flash('Order placed successfully!', 'success')
+        return redirect(url_for('my_orders'))
+    
+    user = User.query.get(session['user_id'])
+    return render_template('checkout.html', 
+                          cart_items=cart_items, 
+                          subtotal=subtotal, 
+                          total=total, 
+                          user=user)
 
 @app.route('/my_orders')
 @login_required
@@ -624,7 +609,6 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         
-        # Create admin user if not exists
         admin = User.query.filter_by(username='admin').first()
         if not admin:
             admin_user = User(
@@ -640,6 +624,5 @@ if __name__ == '__main__':
             db.session.commit()
             print("Admin user created: username=admin, password=admin123")
     
-    # Use environment variable for port (for Render deployment)
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
