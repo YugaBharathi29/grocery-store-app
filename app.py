@@ -358,6 +358,32 @@ def checkout():
     
     return render_template('checkout.html', cart_items=cart_items, subtotal=subtotal, user=user)
 
+@app.route('/update_cart_quantity/<int:product_id>', methods=['POST'])
+@login_required
+def update_cart_quantity(product_id):
+    action = request.form.get('action')
+    
+    cart_item = Cart.query.filter_by(
+        user_id=session['user_id'],
+        product_id=product_id
+    ).first()
+    
+    if cart_item:
+        if action == 'increase':
+            # Check stock before increasing
+            product = Product.query.get(product_id)
+            if cart_item.quantity < product.stock:
+                cart_item.quantity += 1
+                flash(f'Quantity updated for {product.name}', 'success')
+        elif action == 'decrease' and cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            flash(f'Quantity updated for {product.name}', 'success')
+        
+        db.session.commit()
+    
+    return redirect(url_for('cart'))
+
+
 @app.route('/my_orders')
 @login_required
 def my_orders():
