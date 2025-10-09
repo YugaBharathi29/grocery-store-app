@@ -9,6 +9,18 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
 
+# Critical session settings for Render
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600
+app.config['SESSION_COOKIE_SECURE'] = True  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# Force JSON serialization for session
+app.config['SESSION_SERIALIZATION_FORMAT'] = 'json'
+
+
 # Database configuration - PostgreSQL on Render, SQLite locally
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///grocery_store.db')
 
