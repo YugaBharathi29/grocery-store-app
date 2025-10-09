@@ -1,86 +1,129 @@
+<!-- templates/checkout.html -->
 {% extends "base.html" %}
 
-{% block title %}Checkout - Grocery Store{% endblock %}
+{% block title %}Checkout - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2><i class="fas fa-credit-card me-2"></i>Checkout</h2>
-
+<div class="container py-5">
+    <h2 class="mb-4">
+        <i class="fas fa-credit-card me-2"></i>Checkout
+    </h2>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
     <div class="row">
         <div class="col-lg-8">
-            <div class="card mb-4">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header">
-                    <h5><i class="fas fa-user me-2"></i>Billing Information</h5>
+                    <h5>Shipping Information</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" class="form-control" value="{{ user.full_name }}" readonly>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" value="{{ user.email }}" readonly>
-                            </div>
-                        </div>
-
+                    <form id="checkout-form" action="{{ url_for('checkout') }}" method="POST">
                         <div class="mb-3">
-                            <label for="shipping_address" class="form-label">Shipping Address *</label>
-                            <textarea class="form-control" id="shipping_address" name="shipping_address" 
-                                      rows="3" required>{{ user.address }}</textarea>
+                            <label for="shipping_address" class="form-label">Shipping Address</label>
+                            <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3" required>{{ user.address if user else '' }}</textarea>
                         </div>
-
+                        
                         <div class="mb-3">
-                            <label for="payment_method" class="form-label">Payment Method *</label>
+                            <label for="payment_method" class="form-label">Payment Method</label>
                             <select class="form-select" id="payment_method" name="payment_method" required>
-                                <option value="Cash on Delivery">Cash on Delivery</option>
-                                <option value="Credit Card">Credit Card</option>
-                                <option value="Debit Card">Debit Card</option>
-                                <option value="UPI">UPI</option>
+                                <option value="">Select payment method</option>
+                                <option value="COD">Cash on Delivery</option>
+                                <option value="UPI">UPI Payment</option>
+                                <option value="Card">Credit/Debit Card</option>
                             </select>
                         </div>
-
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-check me-2"></i>Place Order
-                        </button>
-                    </form>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="{{ url_for('terms') }}">Terms and Conditions</a>
+                            </label>
+                        </div>
                 </div>
             </div>
+            
+            <div class="text-center mb-4">
+                <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                </a>
+            </div>
         </div>
-
+        
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>Order Summary
+                    </h5>
                 </div>
                 <div class="card-body">
-                    {% for item in cart_items %}
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>
-                            <small>{{ item.product.name }} x {{ item.quantity }}</small>
-                        </div>
-                        <small>₹{{ "%.2f"|format(item.product.price * item.quantity) }}</small>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                    <tr>
+                                        <td>
+                                            {{ item.product.name }} x {{ item.quantity }}
+                                        </td>
+                                        <td class="text-end">
+                                            ₹{{ '%.2f' % (item.product.price * item.quantity) }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Subtotal</th>
+                                    <th class="text-end">₹{{ '%.2f' % subtotal }}</th>
+                                </tr>
+                                <tr>
+                                    <th>Delivery</th>
+                                    <th class="text-end">₹50.00</th>
+                                </tr>
+                                <tr class="table-primary">
+                                    <th>Total</th>
+                                    <th class="text-end">₹{{ '%.2f' % total }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
-                    {% endfor %}
-
-                    <hr>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span>₹{{ "%.2f"|format(total) }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Delivery:</span>
-                        <span>{% if total >= 500 %}Free{% else %}₹50.00{% endif %}</span>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Total:</strong>
-                        <strong>₹{{ "%.2f"|format(total + (0 if total >= 500 else 50)) }}</strong>
-                    </div>
+                    
+                    <!-- Fixed Place Order Button -->
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-credit-card me-2"></i>Place Order
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+    </form> <!-- Close form tag -->
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkout-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted');
+            // No preventDefault - let it submit normally
+        });
+    }
+});
+</script>
 {% endblock %}
