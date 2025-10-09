@@ -1,5 +1,5 @@
 from app import app, db, User
-from werkzeug.security import import generate_password_hash
+from werkzeug.security import generate_password_hash
 
 with app.app_context():
     # Create tables only if they don't exist (preserves existing data)
