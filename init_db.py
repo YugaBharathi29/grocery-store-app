@@ -1,70 +1,50 @@
 """
-SAFETY DATABASE INITIALIZATION SCRIPT
-Creates missing tables without affecting existing data
+Database initialization using raw SQL (most reliable method)
 """
 
 import os
-from app import app, db, Cart  # Import only the Cart model
+from app import app, db
 
-def create_missing_tables():
-    """Create only missing tables, preserving existing data"""
-    
-    with app.app_context():
-        print("Checking database schema...")
+with app.app_context():
+    try:
+        # Create cart table using raw SQL (most reliable method)
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS cart (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 1,
+            created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE,
+            UNIQUE (user_id, product_id)
+        );
+        """
         
-        # List of tables that should exist
-        required_tables = [
-            'user',
-            'category', 
-            'product',
-            'order',
-            'order_item',
-            'cart'  # This is the new table we need
-        ]
+        db.session.execute(db.text(create_table_sql))
+        db.session.commit()
+        print("✅ Cart table created successfully!")
         
-        # Get current tables in database
-        from sqlalchemy import inspect
-        inspector = inspect(db.engine)
-        existing_tables = inspector.get_table_names()
+        # Verify the table exists
+        result = db.session.execute(db.text("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'cart'
+            );
+        """))
+        table_exists = result.fetchone()[0]
         
-        # Find missing tables
-        missing_tables = []
-        for table in required_tables:
-            if table not in existing_tables:
-                missing_tables.append(table)
-        
-        if not missing_tables:
-            print("✅ All required tables exist")
-            return
-        
-        print(f"⚠️ Creating missing table(s): {missing_tables}")
-        
-        # Create only missing tables
-        # This uses SQLAlchemy's metadata to create only non-existent tables
-        db.metadata.create_all(db.engine, tables=[
-            db.metadata.tables[table] for table in missing_tables
-        ])
-        
-        print(f"✅ Created {len(missing_tables)} missing table(s)")
-        
-        # Verify creation
-        remaining_missing = [t for t in required_tables if t not in inspector.get_table_names()]
-        if not remaining_missing:
-            print("✅ All tables are now present")
+        if table_exists:
+            print("✅ Cart table verification: PASSED")
         else:
-            print(f"❌ Still missing: {remaining_missing}")
-
-def create_admin_user():
-    """Create admin user only if it doesn't exist"""
-    from werkzeug.security import generate_password_hash
-    
-    with app.app_context():
-        # Check if admin user exists
-        from app import User
-        admin = User.query.filter_by(username='admin').first()
+            print("❌ Cart table verification: FAILED")
         
+        # Create admin user if not exists
+        from app import User
+        from werkzeug.security import generate_password_hash
+        
+        admin = User.query.filter_by(username='admin').first()
         if not admin:
-            print("Creating admin user...")
             admin_user = User(
                 username='admin',
                 email='admin@grocery.com',
@@ -79,8 +59,7 @@ def create_admin_user():
             print("✅ Admin user created")
         else:
             print("✅ Admin user already exists")
-
-if __name__ == '__main__':
-    create_missing_tables()
-    create_admin_user()
-    print("Database initialization completed")
+            
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        db.session.rollback()
