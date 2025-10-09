@@ -326,41 +326,59 @@ def checkout():
         flash('Your cart is empty.', 'error')
         return redirect(url_for('cart'))
     
-    subtotal = 0
-    for item in cart_items:
-        if item.product:
-            subtotal += item.product.price * item.quantity
-    
+    subtotal = sum(item.product.price * item.quantity for item in cart_items if item.product)
     total = subtotal + 50
     
     if request.method == 'POST':
-        order = Order(
-            user_id=session['user_id'],
-            total_amount=total,
-            shipping_address=request.form['shipping_address'],
-            payment_method=request.form['payment_method'],
-            status='Pending'
-        )
-        db.session.add(order)
-        db.session.flush()
-        
-        for item in cart_items:
-            if item.product:
-                order_item = OrderItem(
-                    order_id=order.id,
-                    product_id=item.product.id,
-                    quantity=item.quantity,
-                    price=item.product.price
-                )
-                db.session.add(order_item)
-                item.product.stock -= item.quantity
-        
-        for item in cart_items:
-            db.session.delete(item)
-        
-        db.session.commit()
-        flash('Order placed successfully!', 'success')
-        return redirect(url_for('my_orders'))
+        try:
+            # Validate form data
+            shipping_address = request.form.get('shipping_address', '').strip()
+            payment_method = request.form.get('payment_method', '').strip()
+            
+            if not shipping_address:
+                flash('Please enter shipping address.', 'error')
+                return redirect(url_for('checkout'))
+            
+            if not payment_method:
+                flash('Please select payment method.', 'error')
+                return redirect(url_for('checkout'))
+            
+            # Create order
+            order = Order(
+                user_id=session['user_id'],
+                total_amount=total,
+                shipping_address=shipping_address,
+                payment_method=payment_method,
+                status='Pending'
+            )
+            db.session.add(order)
+            db.session.flush()
+            
+            # Create order items and update stock
+            for item in cart_items:
+                if item.product:
+                    order_item = OrderItem(
+                        order_id=order.id,
+                        product_id=item.product.id,
+                        quantity=item.quantity,
+                        price=item.product.price
+                    )
+                    db.session.add(order_item)
+                    item.product.stock = max(0, item.product.stock - item.quantity)
+            
+            # Clear cart
+            for item in cart_items:
+                db.session.delete(item)
+            
+            db.session.commit()
+            flash('Order placed successfully! Order ID: ' + str(order.id), 'success')
+            return redirect(url_for('my_orders'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('Error processing order. Please try again.', 'error')
+            print(f"Order error: {str(e)}")
+            return redirect(url_for('checkout'))
     
     user = User.query.get(session['user_id'])
     return render_template('checkout.html', 
