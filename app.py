@@ -86,7 +86,6 @@ class OrderItem(db.Model):
     price = db.Column(db.Float, nullable=False)
     product = db.relationship('Product', backref='order_items')
 
-# Add this model in app.py with your other models
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -96,6 +95,9 @@ class Cart(db.Model):
     
     user = db.relationship('User', backref='cart_items')
     product = db.relationship('Product')
+    
+    __table_args__ = (db.UniqueConstraint('user_id', 'product_id', name='unique_user_product'),)
+
 
 
 # Helper functions
