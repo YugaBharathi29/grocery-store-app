@@ -1,5 +1,5 @@
 """
-Database initialization using raw SQL (most reliable method)
+Database initialization using raw SQL with proper PostgreSQL syntax
 """
 
 import os
@@ -7,7 +7,7 @@ from app import app, db
 
 with app.app_context():
     try:
-        # Create cart table using raw SQL (most reliable method)
+        # Create cart table using raw SQL with proper quoting
         create_table_sql = """
         CREATE TABLE IF NOT EXISTS cart (
             id SERIAL PRIMARY KEY,
@@ -15,7 +15,7 @@ with app.app_context():
             product_id INTEGER NOT NULL,
             quantity INTEGER NOT NULL DEFAULT 1,
             created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
             FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE,
             UNIQUE (user_id, product_id)
         );
