@@ -96,7 +96,8 @@ class Cart(db.Model):
     user = db.relationship('User', backref='cart_items')
     product = db.relationship('Product')
     
-    __table_args__ = (db.UniqueConstraint('user_id', 'product_id', name='unique_user_product'),)
+    # Ensure unique constraint on user_id and product_id
+    __table_args__ = (db.UniqueConstraint('user_id', 'product_id'),)
 
 
 
@@ -244,56 +245,60 @@ def add_to_cart(product_id):
         flash(f'Only {product.stock} items available in stock!', 'error')
         return redirect(url_for('product_detail', id=product_id))
     
-    # Get or initialize cart
-    if 'cart' not in session:
-        session['cart'] = {}
+    # Check if item already in cart
+    cart_item = Cart.query.filter_by(
+        user_id=session['user_id'],
+        product_id=product_id
+    ).first()
     
-    cart = session['cart']
-    product_id_str = str(product_id)
-    
-    # Add product to cart
-    if product_id_str in cart:
-        cart[product_id_str] += quantity
+    if cart_item:
+        cart_item.quantity += quantity
     else:
-        cart[product_id_str] = quantity
+        cart_item = Cart(
+            user_id=session['user_id'],
+            product_id=product_id,
+            quantity=quantity
+        )
+        db.session.add(cart_item)
     
-    # Save cart back to session
-    session['cart'] = cart
-    session.modified = True
-    
+    db.session.commit()
     flash(f'{product.name} added to cart!', 'success')
-    print(f"DEBUG: Cart after adding: {session['cart']}")  # Debug
-    
     return redirect(url_for('cart'))
 
+# Update your cart route
 @app.route('/cart')
 @login_required
 def cart():
-    cart_items = session.get('cart', {})
+    # Get all cart items for the current user
+    cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
+    
     products = []
     total = 0
     
-    print(f"DEBUG: Loading cart with items: {cart_items}")
-    
-    for product_id, quantity in cart_items.items():
-        product = Product.query.get(int(product_id))
-        if product:
-            products.append({'product': product, 'quantity': quantity})
-            total += product.price * quantity
+    for item in cart_items:
+        products.append({
+            'product': item.product,
+            'quantity': item.quantity
+        })
+        total += item.product.price * item.quantity
     
     return render_template('cart.html', products=products, total=total)
 
+# Update your remove_from_cart route
 @app.route('/remove_from_cart/<int:product_id>')
 @login_required
 def remove_from_cart(product_id):
-    cart = session.get('cart', {})
-    product_id_str = str(product_id)
+    cart_item = Cart.query.filter_by(
+        user_id=session['user_id'],
+        product_id=product_id
+    ).first()
     
-    if product_id_str in cart:
-        del cart[product_id_str]
-        session['cart'] = cart
-        session.modified = True
+    if cart_item:
+        db.session.delete(cart_item)
+        db.session.commit()
         flash('Product removed from cart.', 'success')
+    else:
+        flash('Product not found in cart.', 'error')
     
     return redirect(url_for('cart'))
 
