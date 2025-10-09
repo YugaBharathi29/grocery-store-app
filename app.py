@@ -207,12 +207,47 @@ def profile():
     
     return render_template('profile.html', user=user)
 
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+@login_required
+def add_to_cart(product_id):
+    product = Product.query.get_or_404(product_id)
+    quantity = int(request.form.get('quantity', 1))
+    
+    # Validate stock
+    if product.stock < quantity:
+        flash(f'Only {product.stock} items available in stock!', 'error')
+        return redirect(url_for('product_detail', id=product_id))
+    
+    # Get or initialize cart
+    if 'cart' not in session:
+        session['cart'] = {}
+    
+    cart = session['cart']
+    product_id_str = str(product_id)
+    
+    # Add product to cart
+    if product_id_str in cart:
+        cart[product_id_str] += quantity
+    else:
+        cart[product_id_str] = quantity
+    
+    # Save cart back to session
+    session['cart'] = cart
+    session.modified = True
+    
+    flash(f'{product.name} added to cart!', 'success')
+    print(f"DEBUG: Cart after adding: {session['cart']}")  # Debug
+    
+    return redirect(url_for('cart'))
+
 @app.route('/cart')
 @login_required
 def cart():
     cart_items = session.get('cart', {})
     products = []
     total = 0
+    
+    print(f"DEBUG: Loading cart with items: {cart_items}")
     
     for product_id, quantity in cart_items.items():
         product = Product.query.get(int(product_id))
@@ -222,30 +257,20 @@ def cart():
     
     return render_template('cart.html', products=products, total=total)
 
-@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
-@login_required
-def add_to_cart(product_id):
-    quantity = int(request.form.get('quantity', 1))
-    cart = session.get('cart', {})
-    
-    if str(product_id) in cart:
-        cart[str(product_id)] += quantity
-    else:
-        cart[str(product_id)] = quantity
-    
-    session['cart'] = cart
-    flash('Product added to cart!', 'success')
-    return redirect(url_for('cart'))
-
 @app.route('/remove_from_cart/<int:product_id>')
 @login_required
 def remove_from_cart(product_id):
     cart = session.get('cart', {})
-    if str(product_id) in cart:
-        del cart[str(product_id)]
+    product_id_str = str(product_id)
+    
+    if product_id_str in cart:
+        del cart[product_id_str]
         session['cart'] = cart
+        session.modified = True
         flash('Product removed from cart.', 'success')
+    
     return redirect(url_for('cart'))
+
 
 @app.route('/checkout', methods=['GET', 'POST'])
 @login_required
