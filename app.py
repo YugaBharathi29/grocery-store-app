@@ -115,6 +115,22 @@ def admin_required(f):
     return decorated_function
 
 # Routes
+@app.errorhandler(404)
+def page_not_found(e):
+    routes = [str(rule) for rule in app.url_map.iter_rules()]
+    return f"<h1>404 Error</h1><p>{e}</p><h3>Available routes:</h3><ul>{''.join(['<li>' + r + '</li>' for r in routes])}</ul>", 404
+
+@app.route('/')
+def index():
+    """Homepage route"""
+    try:
+        categories = Category.query.filter_by(is_active=True).all()
+        products = Product.query.filter_by(is_active=True).limit(8).all()
+        return render_template('index.html', categories=categories, products=products)
+    except Exception as e:
+        return f"Error loading homepage: {str(e)}", 500
+
+
 @app.route('/products')
 def products():
     """Customer products page - accessible to everyone"""
