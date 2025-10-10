@@ -33,10 +33,10 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-8">
-                                    <h6 class="text-muted mb-2">Order Items:</h6>
+                                    <h6 class="text-muted mb-3">Order Items:</h6>
                                     <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
+                                        <table class="table table-sm table-hover">
+                                            <thead class="table-light">
                                                 <tr>
                                                     <th>Product</th>
                                                     <th>Price</th>
@@ -54,8 +54,13 @@
                                                                          alt="{{ item.product.name }}" 
                                                                          class="img-thumbnail me-2" 
                                                                          style="width: 40px; height: 40px; object-fit: cover;">
+                                                                {% else %}
+                                                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                                         style="width: 40px; height: 40px;">
+                                                                        <i class="fas fa-box text-muted"></i>
+                                                                    </div>
                                                                 {% endif %}
-                                                                {{ item.product.name if item.product else 'Product unavailable' }}
+                                                                <span>{{ item.product.name if item.product else 'Product unavailable' }}</span>
                                                             </div>
                                                         </td>
                                                         <td>₹{{ '%.2f' % item.price }}</td>
@@ -68,38 +73,44 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <h6 class="text-muted mb-2">Delivery Details:</h6>
+                                    <h6 class="text-muted mb-3">Delivery Details:</h6>
                                     <div class="bg-light p-3 rounded mb-3">
-                                        <p class="mb-1"><strong>Address:</strong></p>
+                                        <p class="mb-1"><strong><i class="fas fa-map-marker-alt me-1"></i>Address:</strong></p>
                                         <p class="mb-0 small">{{ order.shipping_address }}</p>
                                     </div>
                                     <div class="bg-light p-3 rounded">
-                                        <p class="mb-1"><strong>Payment Method:</strong></p>
+                                        <p class="mb-1"><strong><i class="fas fa-credit-card me-1"></i>Payment Method:</strong></p>
                                         <p class="mb-0">{{ order.payment_method }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-white">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
+                        <div class="card-footer bg-white border-top">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <div class="mb-2 mb-md-0">
                                     <small class="text-muted">
-                                        Status: <strong class="{% if order.status == 'Cancelled' %}text-danger{% endif %}">{{ order.status }}</strong>
+                                        Status: <strong class="{% if order.status == 'Cancelled' %}text-danger{% elif order.status == 'Delivered' %}text-success{% else %}text-primary{% endif %}">
+                                            {{ order.status }}
+                                        </strong>
                                     </small>
                                 </div>
                                 <div>
                                     {% if order.status == 'Pending' %}
                                         <form action="{{ url_for('cancel_order', order_id=order.id) }}" 
                                               method="POST" 
-                                              style="display: inline;"
-                                              onsubmit="return confirm('Are you sure you want to cancel Order #{{ order.id }}? This action cannot be undone.')">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                              style="display: inline-block;"
+                                              onsubmit="return confirm('⚠️ Are you sure you want to cancel Order #{{ order.id }}?\n\nThis action cannot be undone.');">
+                                            <button type="submit" class="btn btn-sm btn-danger me-2">
                                                 <i class="fas fa-times-circle me-1"></i>Cancel Order
                                             </button>
                                         </form>
                                     {% elif order.status == 'Cancelled' %}
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-ban me-1"></i>Cancelled
+                                        <span class="badge bg-secondary me-2">
+                                            <i class="fas fa-ban me-1"></i>Order Cancelled
+                                        </span>
+                                    {% elif order.status == 'Delivered' %}
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check-circle me-1"></i>Delivered
                                         </span>
                                     {% endif %}
                                     <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-primary">
@@ -114,24 +125,15 @@
         </div>
     {% else %}
         <div class="text-center py-5">
-            <i class="fas fa-shopping-bag" style="font-size: 4rem; color: #dee2e6;"></i>
-            <h4 class="mt-3 text-muted">No orders yet</h4>
-            <p class="text-muted">You haven't placed any orders yet.</p>
-            <a href="{{ url_for('products') }}" class="btn btn-primary">
+            <div class="mb-4">
+                <i class="fas fa-shopping-bag" style="font-size: 5rem; color: #dee2e6;"></i>
+            </div>
+            <h4 class="text-muted mb-2">No orders yet</h4>
+            <p class="text-muted mb-4">You haven't placed any orders yet. Start shopping to see your orders here!</p>
+            <a href="{{ url_for('products') }}" class="btn btn-success btn-lg">
                 <i class="fas fa-shopping-bag me-2"></i>Start Shopping
             </a>
         </div>
     {% endif %}
 </div>
-
-<script>
-// Optional: Auto-dismiss flash messages after 5 seconds
-setTimeout(function() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        const bsAlert = new bootstrap.Alert(alert);
-        bsAlert.close();
-    });
-}, 5000);
-</script>
 {% endblock %}
