@@ -393,6 +393,39 @@ def my_orders():
     orders = Order.query.filter_by(user_id=session['user_id']).order_by(Order.created_at.desc()).all()
     return render_template('my_orders.html', orders=orders)
 
+@app.route('/cancel_order/<int:order_id>', methods=['GET', 'POST'])
+@login_required
+def cancel_order(order_id):
+    try:
+        order = Order.query.get_or_404(order_id)
+        
+        # Verify order belongs to current user
+        if order.user_id != session['user_id']:
+            flash('Unauthorized action.', 'error')
+            return redirect(url_for('my_orders'))
+        
+        # Only allow cancellation for Pending orders
+        if order.status != 'Pending':
+            flash(f'This order cannot be cancelled. Current status: {order.status}', 'error')
+            return redirect(url_for('my_orders'))
+        
+        # Restore stock for cancelled items
+        for item in order.items:
+            if item.product:
+                item.product.stock += item.quantity
+        
+        # Update order status
+        order.status = 'Cancelled'
+        db.session.commit()
+        
+        flash(f'Order #{order.id} has been cancelled successfully.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('Error cancelling order. Please try again.', 'error')
+    
+    return redirect(url_for('my_orders'))
+
 # Admin Routes
 @app.route('/admin')
 @admin_required
@@ -409,33 +442,6 @@ def admin_dashboard():
                          total_orders=total_orders,
                          total_categories=total_categories,
                          recent_orders=recent_orders)
-
-@app.route('/cancel_order/<int:order_id>', methods=['POST'])
-@login_required
-def cancel_order(order_id):
-    order = Order.query.get_or_404(order_id)
-    
-    # Verify order belongs to current user
-    if order.user_id != session['user_id']:
-        flash('Unauthorized action.', 'error')
-        return redirect(url_for('my_orders'))
-    
-    # Only allow cancellation for Pending orders
-    if order.status != 'Pending':
-        flash('This order cannot be cancelled. Current status: ' + order.status, 'error')
-        return redirect(url_for('my_orders'))
-    
-    # Restore stock for cancelled items
-    for item in order.items:
-        if item.product:
-            item.product.stock += item.quantity
-    
-    # Update order status
-    order.status = 'Cancelled'
-    db.session.commit()
-    
-    flash(f'Order #{order.id} has been cancelled successfully.', 'success')
-    return redirect(url_for('my_orders'))
 
 
 @app.route('/admin/categories')
