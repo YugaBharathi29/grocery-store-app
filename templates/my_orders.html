@@ -12,12 +12,12 @@
         <div class="row">
             {% for order in orders %}
                 <div class="col-12 mb-4">
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm {% if order.status == 'Cancelled' %}border-secondary{% endif %}">
                         <div class="card-header {% if order.status == 'Cancelled' %}bg-secondary{% else %}bg-success{% endif %} text-white d-flex justify-content-between align-items-center">
                             <div>
                                 <h5 class="mb-0">
                                     Order #{{ order.id }}
-                                    <span class="badge bg-{% if order.status == 'Pending' %}warning{% elif order.status == 'Processing' %}info{% elif order.status == 'Shipped' %}primary{% elif order.status == 'Delivered' %}success{% elif order.status == 'Cancelled' %}dark{% else %}secondary{% endif %} ms-2">
+                                    <span class="badge bg-{% if order.status == 'Pending' %}warning text-dark{% elif order.status == 'Processing' %}info{% elif order.status == 'Shipped' %}primary{% elif order.status == 'Delivered' %}success{% elif order.status == 'Cancelled' %}dark{% else %}secondary{% endif %} ms-2">
                                         {{ order.status }}
                                     </span>
                                 </h5>
@@ -46,7 +46,7 @@
                                             </thead>
                                             <tbody>
                                                 {% for item in order.items %}
-                                                    <tr>
+                                                    <tr {% if order.status == 'Cancelled' %}class="text-muted"{% endif %}>
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 {% if item.product and item.product.image %}
@@ -84,17 +84,20 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <small class="text-muted">
-                                        Status: <strong>{{ order.status }}</strong>
+                                        Status: <strong class="{% if order.status == 'Cancelled' %}text-danger{% endif %}">{{ order.status }}</strong>
                                     </small>
                                 </div>
                                 <div>
                                     {% if order.status == 'Pending' %}
-                                        <form action="{{ url_for('cancel_order', order_id=order.id) }}" method="POST" style="display: inline;">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="return confirm('Are you sure you want to cancel this order?')">
-                                                <i class="fas fa-times-circle me-1"></i>Cancel Order
-                                            </button>
-                                        </form>
+                                        <a href="{{ url_for('cancel_order', order_id=order.id) }}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to cancel Order #{{ order.id }}? This action cannot be undone.')">
+                                            <i class="fas fa-times-circle me-1"></i>Cancel Order
+                                        </a>
+                                    {% elif order.status == 'Cancelled' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-ban me-1"></i>Cancelled
+                                        </span>
                                     {% endif %}
                                     <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-shopping-cart me-1"></i>Shop Again
