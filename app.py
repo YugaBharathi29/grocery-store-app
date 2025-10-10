@@ -24,7 +24,9 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 db = SQLAlchemy(app)
 
-# Models
+# ============================================
+# MODELS
+# ============================================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -42,7 +44,7 @@ class Category(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     image = db.Column(db.Text)
-    is_active = db.Column(db.Boolean, default=True)  # ADD THIS LINE
+    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     products = db.relationship('Product', backref='category', lazy=True, cascade='all, delete-orphan')
 
@@ -53,10 +55,9 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     image = db.Column(db.Text)
-    is_active = db.Column(db.Boolean, default=True)  # ADD THIS LINE
+    is_active = db.Column(db.Boolean, default=True)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -88,7 +89,9 @@ class Cart(db.Model):
     
     __table_args__ = (db.UniqueConstraint('user_id', 'product_id'),)
 
-# Helper functions
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -114,26 +117,26 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Routes
+# ============================================
+# ERROR HANDLERS
+# ============================================
 @app.errorhandler(404)
 def page_not_found(e):
-    routes = [str(rule) for rule in app.url_map.iter_rules()]
-    return f"<h1>404 Error</h1><p>{e}</p><h3>Available routes:</h3><ul>{''.join(['<li>' + r + '</li>' for r in routes])}</ul>", 404
+    return render_template('404.html'), 404
 
+# ============================================
+# PUBLIC ROUTES
+# ============================================
 @app.route('/')
 def index():
     """Homepage route"""
-    try:
-        categories = Category.query.filter_by(is_active=True).all()
-        products = Product.query.filter_by(is_active=True).limit(8).all()
-        return render_template('index.html', categories=categories, products=products)
-    except Exception as e:
-        return f"Error loading homepage: {str(e)}", 500
-
+    categories = Category.query.filter_by(is_active=True).all()
+    products = Product.query.filter_by(is_active=True).limit(8).all()
+    return render_template('index.html', categories=categories, products=products)
 
 @app.route('/products')
 def products():
-    """Customer products page - accessible to everyone"""
+    """Customer products listing page"""
     categories = Category.query.filter_by(is_active=True).all()
     category_id = request.args.get('category', type=int)
     search = request.args.get('search', '')
@@ -147,9 +150,9 @@ def products():
     products_list = query.all()
     return render_template('products.html', products=products_list, categories=categories, current_category=category_id)
 
-
 @app.route('/product/<int:id>')
 def product_detail(id):
+    """Single product detail page"""
     product = Product.query.filter_by(id=id, is_active=True).first_or_404()
     related_products = Product.query.filter(
         Product.category_id == product.category_id, 
@@ -158,7 +161,9 @@ def product_detail(id):
     ).limit(4).all()
     return render_template('product_detail.html', product=product, related_products=related_products)
 
-
+# ============================================
+# AUTHENTICATION ROUTES
+# ============================================
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -238,7 +243,9 @@ def profile():
     
     return render_template('profile.html', user=user)
 
-# Cart Routes
+# ============================================
+# CART ROUTES
+# ============================================
 @app.route('/cart')
 @login_required
 def cart():
@@ -337,6 +344,9 @@ def remove_from_cart(product_id):
     
     return redirect(url_for('cart'))
 
+# ============================================
+# ORDER ROUTES
+# ============================================
 @app.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
@@ -351,7 +361,6 @@ def checkout():
     
     if request.method == 'POST':
         try:
-            # Validate form data
             shipping_address = request.form.get('shipping_address', '').strip()
             payment_method = request.form.get('payment_method', '').strip()
             
@@ -363,7 +372,6 @@ def checkout():
                 flash('Please select payment method.', 'error')
                 return redirect(url_for('checkout'))
             
-            # Create order
             order = Order(
                 user_id=session['user_id'],
                 total_amount=total,
@@ -374,7 +382,6 @@ def checkout():
             db.session.add(order)
             db.session.flush()
             
-            # Create order items and update stock
             for item in cart_items:
                 if item.product:
                     order_item = OrderItem(
@@ -386,7 +393,6 @@ def checkout():
                     db.session.add(order_item)
                     item.product.stock = max(0, item.product.stock - item.quantity)
             
-            # Clear cart
             for item in cart_items:
                 db.session.delete(item)
             
@@ -397,15 +403,10 @@ def checkout():
         except Exception as e:
             db.session.rollback()
             flash('Error processing order. Please try again.', 'error')
-            print(f"Order error: {str(e)}")
             return redirect(url_for('checkout'))
     
     user = User.query.get(session['user_id'])
-    return render_template('checkout.html', 
-                          cart_items=cart_items, 
-                          subtotal=subtotal, 
-                          total=total, 
-                          user=user)
+    return render_template('checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, user=user)
 
 @app.route('/my_orders')
 @login_required
@@ -419,22 +420,18 @@ def cancel_order(order_id):
     try:
         order = Order.query.get_or_404(order_id)
         
-        # Verify order belongs to current user
         if order.user_id != session['user_id']:
             flash('Unauthorized action.', 'error')
             return redirect(url_for('my_orders'))
         
-        # Only allow cancellation for Pending orders
         if order.status != 'Pending':
             flash(f'This order cannot be cancelled. Current status: {order.status}', 'error')
             return redirect(url_for('my_orders'))
         
-        # Restore stock for cancelled items
         for item in order.items:
             if item.product:
                 item.product.stock += item.quantity
         
-        # Update order status
         order.status = 'Cancelled'
         db.session.commit()
         
@@ -446,7 +443,9 @@ def cancel_order(order_id):
     
     return redirect(url_for('my_orders'))
 
-# Admin Routes
+# ============================================
+# ADMIN ROUTES
+# ============================================
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -462,7 +461,6 @@ def admin_dashboard():
                          total_orders=total_orders,
                          total_categories=total_categories,
                          recent_orders=recent_orders)
-
 
 @app.route('/admin/categories')
 @admin_required
@@ -545,8 +543,6 @@ def toggle_category(category_id):
 def delete_category(category_id):
     try:
         category = Category.query.get_or_404(category_id)
-        
-        # Check if category has products
         products = Product.query.filter_by(category_id=category_id).all()
         
         if products:
@@ -564,10 +560,10 @@ def delete_category(category_id):
     
     return redirect(url_for('admin_categories'))
 
-
 @app.route('/admin/products')
 @admin_required
 def admin_products():
+    """Admin products management page"""
     products = Product.query.all()
     return render_template('admin/products.html', products=products)
 
@@ -666,19 +662,15 @@ def delete_product(product_id):
         product = Product.query.get_or_404(product_id)
         product_name = product.name
         
-        # Remove from all carts
         Cart.query.filter_by(product_id=product_id).delete()
         
-        # For safety, don't allow deletion if in orders - just show warning
         order_count = OrderItem.query.filter_by(product_id=product_id).count()
         if order_count > 0:
             flash(f'Warning: "{product_name}" is in {order_count} order(s). Consider marking as out of stock instead of deleting.', 'warning')
-            # Set stock to 0 instead
             product.stock = 0
             db.session.commit()
             flash(f'Product "{product_name}" stock set to 0.', 'info')
         else:
-            # Safe to delete
             db.session.delete(product)
             db.session.commit()
             flash(f'Product "{product_name}" deleted successfully!', 'success')
@@ -746,6 +738,9 @@ def delete_user(user_id):
     flash('User deleted successfully!', 'success')
     return redirect(url_for('admin_users'))
 
+# ============================================
+# RUN APP
+# ============================================
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -766,4 +761,4 @@ if __name__ == '__main__':
             print("Admin user created: username=admin, password=admin123")
     
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
