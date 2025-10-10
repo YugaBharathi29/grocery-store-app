@@ -117,17 +117,17 @@ def admin_required(f):
 # Routes
 @app.route('/')
 def index():
-    categories = Category.query.all()
-    products = Product.query.limit(8).all()
+    categories = Category.query.filter_by(is_active=True).all()
+    products = Product.query.filter_by(is_active=True).limit(8).all()
     return render_template('index.html', categories=categories, products=products)
 
 @app.route('/products')
 def products():
-    categories = Category.query.all()
+    categories = Category.query.filter_by(is_active=True).all()
     category_id = request.args.get('category', type=int)
     search = request.args.get('search', '')
     
-    query = Product.query
+    query = Product.query.filter_by(is_active=True)
     if category_id:
         query = query.filter_by(category_id=category_id)
     if search:
@@ -136,11 +136,17 @@ def products():
     products = query.all()
     return render_template('products.html', products=products, categories=categories, current_category=category_id)
 
+
 @app.route('/product/<int:id>')
 def product_detail(id):
-    product = Product.query.get_or_404(id)
-    related_products = Product.query.filter(Product.category_id == product.category_id, Product.id != product.id).limit(4).all()
+    product = Product.query.filter_by(id=id, is_active=True).first_or_404()
+    related_products = Product.query.filter(
+        Product.category_id == product.category_id, 
+        Product.id != product.id,
+        Product.is_active == True
+    ).limit(4).all()
     return render_template('product_detail.html', product=product, related_products=related_products)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -243,7 +249,7 @@ def cart():
 @app.route('/add_to_cart/<int:product_id>', methods=['POST'])
 @login_required
 def add_to_cart(product_id):
-    product = Product.query.get_or_404(product_id)
+    product = Product.query.filter_by(id=product_id, is_active=True).first_or_404()
     quantity = int(request.form.get('quantity', 1))
     
     if product.stock < quantity:
