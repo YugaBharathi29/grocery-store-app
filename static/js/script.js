@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
         form.action.includes('edit') ||
         form.action.includes('edit_user') ||
         form.action.includes('add_to_cart') ||
+        form.action.includes('remove_from_cart') ||
+        form.action.includes('update_cart_quantity') ||
+        form.action.includes('cancel_order') ||
         form.action.includes('checkout') ||
         form.action.includes('profile') ||
         form.action.includes('/login') ||
@@ -53,6 +56,8 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.pathname.includes('edit_product') ||
         window.location.pathname.includes('edit_user') ||
         window.location.pathname.includes('checkout') ||
+        window.location.pathname.includes('my_orders') ||
+        window.location.pathname.includes('cart') ||
         window.location.pathname.includes('profile')) {
       return;
     }
