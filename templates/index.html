@@ -1,28 +1,199 @@
-<!-- Categories Section -->
-<section class="py-5 bg-light">
+{% extends "base.html" %}
+
+{% block title %}Home - {{ super() }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-white text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">
-        <h2 class="text-center mb-5">Shop by Category</h2>
-        <div class="row g-4">
-            {% for category in categories %}
-                <div class="col-md-3 col-sm-6">
-                    <div class="card h-100 shadow-sm category-card">
-                        {% if category.image %}
-                            <img src="{{ category.image }}" class="card-img-top" alt="{{ category.name }}" style="height: 200px; object-fit: cover;">
-                        {% else %}
-                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-tags fa-3x text-white"></i>
-                            </div>
-                        {% endif %}
-                        <div class="card-body text-center">
-                            <h5 class="card-title">{{ category.name }}</h5>
-                            <p class="card-text text-muted">{{ category.description }}</p>
-                            <a href="{{ url_for('products', category=category.id) }}" class="btn btn-success">
-                                <i class="fas fa-eye me-1"></i>View Products
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-lg-start">
+                <h1 class="display-4 fw-bold mb-3">Welcome to GroceryStore</h1>
+                <p class="lead mb-4">Fresh groceries delivered to your doorstep. Quality products at the best prices.</p>
+                <a href="{{ url_for('products') }}" class="btn btn-light btn-lg shadow">
+                    <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                </a>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" 
+                     alt="Grocery Shopping" class="img-fluid rounded shadow-lg">
+            </div>
         </div>
     </div>
 </section>
+
+<!-- Categories Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-tags me-2 text-primary"></i>Shop by Category
+        </h2>
+        {% if categories and categories|length > 0 %}
+            <div class="row g-4">
+                {% for category in categories %}
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0 category-card">
+                            {% if category.image %}
+                                <img src="{{ category.image }}" 
+                                     class="card-img-top" 
+                                     alt="{{ category.name }}" 
+                                     style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center" 
+                                     style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <i class="fas fa-tags fa-3x text-white"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body text-center">
+                                <h5 class="card-title fw-bold">{{ category.name }}</h5>
+                                <p class="card-text text-muted small">{{ category.description }}</p>
+                                <a href="{{ url_for('products', category=category.id) }}" 
+                                   class="btn btn-success btn-sm">
+                                    <i class="fas fa-arrow-right me-1"></i>View Products
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No categories available</h4>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-star me-2 text-warning"></i>Featured Products
+        </h2>
+        {% if products and products|length > 0 %}
+            <div class="row g-4">
+                {% for product in products %}
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0 product-card">
+                            {% if product.image %}
+                                <img src="{{ product.image }}" 
+                                     class="card-img-top" 
+                                     alt="{{ product.name }}" 
+                                     style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="fas fa-box fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            {% if product.stock <= 0 %}
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                </div>
+                            {% elif product.stock < 10 %}
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-warning text-dark">Low Stock</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold">{{ product.name }}</h6>
+                                <p class="card-text text-muted small">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="h5 text-success mb-0">₹{{ '%.2f' % product.price }}</span>
+                                    <a href="{{ url_for('product_detail', id=product.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-5">
+                <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-cart me-2"></i>View All Products
+                </a>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No products available</h4>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-box p-4">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                    <h5>Fast Delivery</h5>
+                    <p class="text-muted small">Get your groceries delivered quickly</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-box p-4">
+                    <i class="fas fa-leaf fa-3x text-success mb-3"></i>
+                    <h5>Fresh Products</h5>
+                    <p class="text-muted small">100% fresh and organic products</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-box p-4">
+                    <i class="fas fa-tags fa-3x text-warning mb-3"></i>
+                    <h5>Best Prices</h5>
+                    <p class="text-muted small">Competitive prices on all items</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-box p-4">
+                    <i class="fas fa-headset fa-3x text-info mb-3"></i>
+                    <h5>24/7 Support</h5>
+                    <p class="text-muted small">Customer support always available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.category-card, .product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.category-card:hover, .product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+
+.hero-section {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+}
+
+.feature-box {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.feature-box:hover {
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.product-card {
+    position: relative;
+}
+</style>
+{% endblock %}
