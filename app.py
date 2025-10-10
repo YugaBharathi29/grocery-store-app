@@ -410,6 +410,34 @@ def admin_dashboard():
                          total_categories=total_categories,
                          recent_orders=recent_orders)
 
+@app.route('/cancel_order/<int:order_id>', methods=['POST'])
+@login_required
+def cancel_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    
+    # Verify order belongs to current user
+    if order.user_id != session['user_id']:
+        flash('Unauthorized action.', 'error')
+        return redirect(url_for('my_orders'))
+    
+    # Only allow cancellation for Pending orders
+    if order.status != 'Pending':
+        flash('This order cannot be cancelled. Current status: ' + order.status, 'error')
+        return redirect(url_for('my_orders'))
+    
+    # Restore stock for cancelled items
+    for item in order.items:
+        if item.product:
+            item.product.stock += item.quantity
+    
+    # Update order status
+    order.status = 'Cancelled'
+    db.session.commit()
+    
+    flash(f'Order #{order.id} has been cancelled successfully.', 'success')
+    return redirect(url_for('my_orders'))
+
+
 @app.route('/admin/categories')
 @admin_required
 def admin_categories():
