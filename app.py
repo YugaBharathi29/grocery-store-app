@@ -115,14 +115,9 @@ def admin_required(f):
     return decorated_function
 
 # Routes
-@app.route('/')
-def index():
-    categories = Category.query.filter_by(is_active=True).all()
-    products = Product.query.filter_by(is_active=True).limit(8).all()
-    return render_template('index.html', categories=categories, products=products)
-
 @app.route('/products')
 def products():
+    """Customer products page - accessible to everyone"""
     categories = Category.query.filter_by(is_active=True).all()
     category_id = request.args.get('category', type=int)
     search = request.args.get('search', '')
@@ -133,8 +128,15 @@ def products():
     if search:
         query = query.filter(Product.name.contains(search))
     
-    products = query.all()
-    return render_template('products.html', products=products, categories=categories, current_category=category_id)
+    products_list = query.all()
+    return render_template('products.html', products=products_list, categories=categories, current_category=category_id)
+
+@app.route('/admin/products')
+@admin_required
+def admin_products():
+    """Admin products management page - admin only"""
+    products_list = Product.query.all()  # Show all products including hidden
+    return render_template('admin/products.html', products=products_list)
 
 
 @app.route('/product/<int:id>')
