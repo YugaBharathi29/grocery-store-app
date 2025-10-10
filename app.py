@@ -507,11 +507,27 @@ def edit_category(category_id):
 @app.route('/admin/delete_category/<int:category_id>', methods=['POST'])
 @admin_required
 def delete_category(category_id):
-    category = Category.query.get_or_404(category_id)
-    db.session.delete(category)
-    db.session.commit()
-    flash('Category deleted successfully!', 'success')
+    try:
+        category = Category.query.get_or_404(category_id)
+        
+        # Check if category has products
+        products = Product.query.filter_by(category_id=category_id).all()
+        
+        if products:
+            flash(f'Cannot delete category "{category.name}" because it contains {len(products)} product(s). Please delete or reassign the products first.', 'error')
+            return redirect(url_for('admin_categories'))
+        
+        category_name = category.name
+        db.session.delete(category)
+        db.session.commit()
+        flash(f'Category "{category_name}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting category: {str(e)}', 'error')
+    
     return redirect(url_for('admin_categories'))
+
 
 @app.route('/admin/products')
 @admin_required
@@ -594,10 +610,31 @@ def edit_product(product_id):
 @app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
 @admin_required
 def delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    flash('Product deleted successfully!', 'success')
+    try:
+        product = Product.query.get_or_404(product_id)
+        product_name = product.name
+        
+        # Remove from all carts
+        Cart.query.filter_by(product_id=product_id).delete()
+        
+        # For safety, don't allow deletion if in orders - just show warning
+        order_count = OrderItem.query.filter_by(product_id=product_id).count()
+        if order_count > 0:
+            flash(f'Warning: "{product_name}" is in {order_count} order(s). Consider marking as out of stock instead of deleting.', 'warning')
+            # Set stock to 0 instead
+            product.stock = 0
+            db.session.commit()
+            flash(f'Product "{product_name}" stock set to 0.', 'info')
+        else:
+            # Safe to delete
+            db.session.delete(product)
+            db.session.commit()
+            flash(f'Product "{product_name}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'error')
+    
     return redirect(url_for('admin_products'))
 
 @app.route('/admin/orders')
