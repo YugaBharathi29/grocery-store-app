@@ -1,216 +1,140 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}Manage Orders - Admin{% endblock %}
 
 {% block content %}
-<div class="container-fluid admin-area">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2 admin-sidebar-col">
-      <div class="sidebar">
-        <div class="list-group list-group-flush">
-          <a href="{{ url_for('admin_dashboard') }}" class="list-group-item admin-nav-item">
-            <i class="fas fa-tachometer-alt"></i> Dashboard
-          </a>
-          <a href="{{ url_for('admin_categories') }}" class="list-group-item admin-nav-item">
-            <i class="fas fa-tags"></i> Categories
-          </a>
-          <a href="{{ url_for('admin_products') }}" class="list-group-item admin-nav-item">
-            <i class="fas fa-box"></i> Products
-          </a>
-          <a href="{{ url_for('admin_orders') }}" class="list-group-item admin-nav-item active">
-            <i class="fas fa-shopping-cart"></i> Orders
-          </a>
-          <a href="{{ url_for('admin_users') }}" class="list-group-item admin-nav-item">
-            <i class="fas fa-users"></i> Users
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-md-9 col-lg-10 admin-content-col">
-      <div class="admin-main-content">
-        <h2 class="admin-text mb-4">
-          <i class="fas fa-shopping-cart text-success me-2"></i>Manage Orders
-        </h2>
-
-        {% if orders %}
-          <div class="card">
-            <div class="card-header bg-success text-white">
-              <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Orders</h5>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-striped mb-0">
-                  <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Customer</th>
-                      <th>Items</th>
-                      <th>Amount</th>
-                      <th>Payment</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for order in orders %}
-                    <!-- Order Row -->
-                    <tr class="text-visible">
-                      <td><strong>#{{ order.id }}</strong></td>
-                      <td>
-                        <strong>{{ order.user.full_name }}</strong><br>
-                        <small class="text-muted">{{ order.user.email }}</small>
-                      </td>
-                      <td>
-                        {% for item in order.items %}
-                          {{ item.product.name }} ({{ item.quantity }}){% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                      </td>
-                      <td><strong class="text-success">₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
-                      <td>{{ order.payment_method }}</td>
-                      <td>
-                        <form method="POST" action="{{ url_for('update_order_status', order_id=order.id) }}" style="display:inline;">
-                          <select name="status" class="form-select form-select-sm text-dark" onchange="this.form.submit()">
-                            <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
-                            <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
-                            <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
-                            <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                            <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                          </select>
-                        </form>
-                      </td>
-                      <td>{{ order.created_at.strftime('%m/%d/%Y') }}</td>
-                      <td>
-                        <button type="button" class="btn btn-sm btn-outline-info view-order-details" data-order-id="{{ order.id }}" title="View Details">
-                          <i class="fas fa-eye"></i>
-                        </button>
-                      </td>
-                    </tr>
-
-                    <!-- Order Details Row (Hidden by default) -->
-                    <tr id="order-details-{{ order.id }}" class="order-details-row" style="display:none;">
-                      <td colspan="8">
-                        <div class="p-3 bg-light">
-                          <h6 class="text-dark mb-3"><i class="fas fa-info-circle me-2"></i>Order Details</h6>
-                          
-                          <div class="row mb-3">
-                            <div class="col-md-6">
-                              <strong class="text-dark">Shipping Address:</strong><br>
-                              <span class="text-muted">{{ order.shipping_address }}</span>
-                            </div>
-                            <div class="col-md-6">
-                              <strong class="text-dark">Payment Method:</strong><br>
-                              <span class="text-muted">{{ order.payment_method }}</span>
-                            </div>
-                          </div>
-
-                          <table class="table table-sm table-bordered bg-white">
-                            <thead>
-                              <tr>
-                                <th>Product</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for item in order.items %}
-                              <tr>
-                                <td>{{ item.product.name }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>₹{{ "%.2f"|format(item.price) }}</td>
-                                <td>₹{{ "%.2f"|format(item.price * item.quantity) }}</td>
-                              </tr>
-                              {% endfor %}
-                              <tr>
-                                <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
-                                <td><strong>₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          <button type="button" class="btn btn-secondary close-order-details">
-                            <i class="fas fa-times me-2"></i>Close
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        {% else %}
-          <div class="text-center py-5">
-            <div class="mb-4">
-              <i class="fas fa-shopping-cart fa-4x text-muted"></i>
-            </div>
-            <h4 class="admin-text">No orders found</h4>
-            <p class="text-muted">Orders will appear here when customers place them.</p>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shopping-cart me-2"></i>Manage Orders</h2>
 </div>
 
-<style>
-  .admin-area h2, .admin-area td, .admin-area p, .admin-area select, .admin-area h6, .admin-area th, .admin-area strong {
-    color: #343a40 !important;
-  }
-  .admin-nav-item {
-    color: #495057 !important;
-  }
-  .admin-nav-item.active {
-    background-color: #28a745 !important;
-    color: white !important;
-  }
-  .text-visible {
-    color: #495057 !important;
-  }
-  .order-details-row {
-    background-color: #f8f9fa;
-  }
-  .table-bordered td, .table-bordered th {
-    color: #343a40 !important;
-  }
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle order details
-    document.querySelectorAll('.view-order-details').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const orderId = this.dataset.orderId;
-            const detailsRow = document.getElementById('order-details-' + orderId);
-            
-            // Close all other detail rows
-            document.querySelectorAll('.order-details-row').forEach(function(row) {
-                if (row.id !== 'order-details-' + orderId) {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Toggle current row
-            if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-                detailsRow.style.display = 'table-row';
-            } else {
-                detailsRow.style.display = 'none';
-            }
-        });
-    });
-    
-    // Close button functionality
-    document.querySelectorAll('.close-order-details').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const detailsRow = this.closest('.order-details-row');
-            detailsRow.style.display = 'none';
-        });
-    });
-});
-</script>
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Orders</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><strong>#{{ order.id }}</strong></td>
+                            <td>
+                                <strong>{{ order.user.full_name if order.user.full_name else order.user.username }}</strong><br>
+                                <small class="text-muted">{{ order.user.email }}</small>
+                            </td>
+                            <td>
+                                {% for item in order.items %}
+                                    {{ item.product.name if item.product else 'N/A' }} ({{ item.quantity }})<br>
+                                {% endfor %}
+                            </td>
+                            <td><strong>₹{{ '%.2f' % order.total_amount }}</strong></td>
+                            <td>{{ order.payment_method }}</td>
+                            <td>
+                                <span class="badge bg-{% if order.status == 'Pending' %}warning text-dark{% elif order.status == 'Processing' %}info{% elif order.status == 'Shipped' %}primary{% elif order.status == 'Delivered' %}success{% elif order.status == 'Cancelled' %}danger{% else %}secondary{% endif %}">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                            <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="collapse" data-bs-target="#order{{ order.id }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="order{{ order.id }}">
+                            <td colspan="8">
+                                <div class="card card-body bg-light">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6><i class="fas fa-info-circle me-2"></i>Order Details</h6>
+                                            
+                                            <p class="mb-2">
+                                                <strong>Customer Name:</strong> {{ order.user.full_name if order.user.full_name else order.user.username }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong>Email:</strong> {{ order.user.email }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong><i class="fas fa-phone me-1"></i>Phone Number:</strong> {{ order.user.phone if order.user.phone else 'Not provided' }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong>Shipping Address:</strong><br>
+                                                {{ order.shipping_address }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <strong>Payment Method:</strong><br>
+                                                {{ order.payment_method }}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6><i class="fas fa-box me-2"></i>Order Items</h6>
+                                            <table class="table table-sm table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Product</th>
+                                                        <th>Qty</th>
+                                                        <th>Price</th>
+                                                        <th>Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in order.items %}
+                                                        <tr>
+                                                            <td>{{ item.product.name if item.product else 'Product unavailable' }}</td>
+                                                            <td>{{ item.quantity }}</td>
+                                                            <td>₹{{ '%.2f' % item.price }}</td>
+                                                            <td>₹{{ '%.2f' % (item.price * item.quantity) }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr class="table-active">
+                                                        <th colspan="3" class="text-end">Total Amount:</th>
+                                                        <th>₹{{ '%.2f' % order.total_amount }}</th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST" class="d-flex align-items-center">
+                                                <label for="status{{ order.id }}" class="me-2"><strong>Update Status:</strong></label>
+                                                <select name="status" id="status{{ order.id }}" class="form-select form-select-sm me-2" style="width: auto;">
+                                                    <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                                                    <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                                    <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                                    <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-check me-1"></i>Update
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-secondary ms-2" data-bs-toggle="collapse" data-bs-target="#order{{ order.id }}">
+                                                    <i class="fas fa-times me-1"></i>Close
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}
