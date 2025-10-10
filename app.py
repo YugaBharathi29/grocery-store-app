@@ -42,6 +42,7 @@ class Category(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     image = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)  # ADD THIS LINE
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     products = db.relationship('Product', backref='category', lazy=True, cascade='all, delete-orphan')
 
@@ -52,8 +53,10 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     image = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)  # ADD THIS LINE
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -504,6 +507,22 @@ def edit_category(category_id):
     
     return render_template('admin/edit_category.html', category=category)
 
+@app.route('/admin/toggle_category/<int:category_id>', methods=['POST'])
+@admin_required
+def toggle_category(category_id):
+    try:
+        category = Category.query.get_or_404(category_id)
+        category.is_active = not category.is_active
+        db.session.commit()
+        
+        status = "shown" if category.is_active else "hidden"
+        flash(f'Category "{category.name}" is now {status}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_categories'))
+
 @app.route('/admin/delete_category/<int:category_id>', methods=['POST'])
 @admin_required
 def delete_category(category_id):
@@ -606,6 +625,22 @@ def edit_product(product_id):
         return redirect(url_for('admin_products'))
     
     return render_template('admin/edit_product.html', product=product, categories=categories)
+
+@app.route('/admin/toggle_product/<int:product_id>', methods=['POST'])
+@admin_required
+def toggle_product(product_id):
+    try:
+        product = Product.query.get_or_404(product_id)
+        product.is_active = not product.is_active
+        db.session.commit()
+        
+        status = "shown" if product.is_active else "hidden"
+        flash(f'Product "{product.name}" is now {status}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_products'))
 
 @app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
 @admin_required
