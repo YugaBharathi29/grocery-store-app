@@ -131,13 +131,6 @@ def products():
     products_list = query.all()
     return render_template('products.html', products=products_list, categories=categories, current_category=category_id)
 
-@app.route('/admin/products')
-@admin_required
-def admin_products():
-    """Admin products management page - admin only"""
-    products_list = Product.query.all()  # Show all products including hidden
-    return render_template('admin/products.html', products=products_list)
-
 
 @app.route('/product/<int:id>')
 def product_detail(id):
